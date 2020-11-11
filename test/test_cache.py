@@ -1,14 +1,14 @@
 import os
 import os.path as op
+import platform
 import random
 import sys
 import time
-
-from dandi.support.cache import PersistentCache
-from dandi.utils import on_windows
-
 import pytest
+from pyfscacher.cache import PersistentCache
 
+platform_system = platform.system().lower()
+on_windows = platform_system == "windows"
 
 # not doing random for now within fixtures, so they could share the same name
 _cache_name = "test-%d" % random.randint(1, 1000)
@@ -78,7 +78,7 @@ def test_memoize_multiple(cache):
     def f3():  # nesting call into f2
         return f2() + 1
 
-    for i in range(3):
+    for _ in range(3):
         assert f1() == 1
         assert f2() == 2
         assert f3() == 3
@@ -169,7 +169,7 @@ def test_memoize_path_persist(tmp_path):
         f.write(
             f"""\
 from os.path import basename
-from dandi.support.cache import PersistentCache
+from pyfscacher.cache import PersistentCache
 cache = PersistentCache(name="{cache_name}")
 
 @cache.memoize_path

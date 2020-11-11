@@ -1,11 +1,11 @@
-import appdirs
-import joblib
+from   functools import wraps
 import logging
 import os
 import os.path as op
 import shutil
 import time
-from functools import wraps
+import appdirs
+import joblib
 
 lgr = logging.getLogger(__name__)
 
