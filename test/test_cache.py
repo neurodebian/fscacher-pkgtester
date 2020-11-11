@@ -5,7 +5,7 @@ import random
 import sys
 import time
 import pytest
-from pyfscacher.cache import PersistentCache
+from   pyfscacher import PersistentCache
 
 platform_system = platform.system().lower()
 on_windows = platform_system == "windows"
@@ -169,7 +169,7 @@ def test_memoize_path_persist(tmp_path):
         f.write(
             f"""\
 from os.path import basename
-from pyfscacher.cache import PersistentCache
+from pyfscacher import PersistentCache
 cache = PersistentCache(name="{cache_name}")
 
 @cache.memoize_path
