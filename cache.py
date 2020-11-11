@@ -1,14 +1,13 @@
 import appdirs
 import joblib
+import logging
 import os
 import os.path as op
 import shutil
 import time
 from functools import wraps
 
-from .. import get_logger
-
-lgr = get_logger()
+lgr = logging.getLogger(__name__)
 
 
 class PersistentCache(object):
