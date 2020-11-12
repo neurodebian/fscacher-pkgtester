@@ -5,7 +5,7 @@ import random
 import sys
 import time
 import pytest
-from   pyfscacher import PersistentCache
+from pyfscacher import PersistentCache
 
 platform_system = platform.system().lower()
 on_windows = platform_system == "windows"
