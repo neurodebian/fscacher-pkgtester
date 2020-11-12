@@ -30,7 +30,7 @@ class PersistentCache(object):
          not use it).  Could be e.g. versions of relevant/used
          python modules (pynwb, etc)
         """
-        dirs = appdirs.AppDirs("dandi")
+        dirs = appdirs.AppDirs("fscacher")
         self._cache_file = op.join(dirs.user_cache_dir, (name or "cache"))
         self._memory = joblib.Memory(self._cache_file, verbose=0)
         cache_var = os.environ.get("DANDI_CACHE", "").lower()
