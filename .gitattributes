@@ -1,1 +1,1 @@
-src/pyfscacher/_version.py export-subst
+src/fscacher/_version.py export-subst
