@@ -160,6 +160,86 @@ def test_memoize_path(cache, tmp_path):
     check_new_memoread(1, "Content")
 
 
+def test_memoize_path_dir(cache, tmp_path):
+    calls = []
+
+    @cache.memoize_path
+    def memoread(path, arg, kwarg=None):
+        calls.append([path, arg, kwarg])
+        total_size = 0
+        with os.scandir(path) as entries:
+            for e in entries:
+                if e.is_file():
+                    total_size += e.stat().st_size
+        return total_size
+
+    def check_new_memoread(arg, content, expect_new=False):
+        ncalls = len(calls)
+        assert memoread(path, arg) == content
+        assert len(calls) == ncalls + 1
+        assert memoread(path, arg) == content
+        assert len(calls) == ncalls + 1 + int(expect_new)
+
+    fname = "foo"
+    path = tmp_path / fname
+
+    with pytest.raises(IOError):
+        memoread(path, 0)
+    # and again
+    with pytest.raises(IOError):
+        memoread(path, 0)
+    assert len(calls) == 2
+
+    path.mkdir()
+    (path / "a.txt").write_text("Alpha\n")
+    (path / "b.txt").write_text("Beta\n")
+
+    t0 = time.time()
+    try:
+        # unless this computer is too slow -- there should be less than
+        # cache._min_dtime between our creating the file and testing,
+        # so we would force a direct read:
+        check_new_memoread(0, 11, True)
+    except AssertionError:  # pragma: no cover
+        # if computer is indeed slow (happens on shared CIs) we might fail
+        # because distance is too short
+        if time.time() - t0 < cache._min_dtime:
+            raise  # if we were quick but still failed -- legit
+    assert calls[-1] == [str(path), 0, None]
+
+    # but if we sleep - should memoize
+    time.sleep(cache._min_dtime * 1.1)
+    check_new_memoread(1, 11)
+
+    # and if we modify the file -- a new read
+    time.sleep(cache._min_dtime * 1.1)
+    (path / "c.txt").write_text("Gamma\n")
+    ncalls = len(calls)
+    assert memoread(path, 1) == 17
+    assert len(calls) == ncalls + 1
+
+    time.sleep(cache._min_dtime * 1.1)
+    check_new_memoread(0, 17)
+
+    # Check that symlinks should be dereferenced
+    if not on_windows or sys.version_info[:2] >= (3, 8):
+        # realpath doesn't work right on Windows on pre-3.8 Python, so skip the
+        # test then.
+        symlink1 = str(tmp_path / (fname + ".link1"))
+        try:
+            os.symlink(fname, symlink1)
+        except OSError:
+            pass
+        if op.islink(symlink1):  # hopefully would just skip Windows if not supported
+            ncalls = len(calls)
+            assert memoread(symlink1, 0) == 17
+            assert len(calls) == ncalls  # no new call
+
+    # and if we "clear", would it still work?
+    cache.clear()
+    check_new_memoread(1, 17)
+
+
 def test_memoize_path_persist(tmp_path):
     from subprocess import run, PIPE
 

@@ -1,3 +1,4 @@
+from collections import deque, namedtuple
 from functools import wraps
 import logging
 import os
@@ -90,28 +91,27 @@ class PersistentCache(object):
             path = op.realpath(path)
             if path != path_orig:
                 lgr.log(5, "Dereferenced %r into %r", path_orig, path)
-            fprint = None if op.isdir(path) else self._get_file_fingerprint(path)
-            # We should still pass through if file was modified just now,
-            # since that could mask out quick modifications.
-            # Target use cases will not be like that.
-            time_now = time.time()
-            dtime = abs(time_now - fprint[0] * 1e-9) if fprint else None
+            if op.isdir(path):
+                fprint = self._get_dir_fingerprint(path)
+            else:
+                fprint = self._get_file_fingerprint(path)
             if fprint is None:
                 lgr.debug("Calling %s directly since no fingerprint for %r", f, path)
                 # just call the function -- we have no fingerprint,
                 # probably does not exist or permissions are wrong
                 ret = f(path, *args, **kwargs)
-            elif dtime is not None and dtime < self._min_dtime:
-                lgr.debug(
-                    "Calling %s directly since too short (%f) for %r", f, dtime, path
-                )
+            # We should still pass through if file was modified just now,
+            # since that could mask out quick modifications.
+            # Target use cases will not be like that.
+            elif fprint.modified_in_window(self._min_dtime):
+                lgr.debug("Calling %s directly since too short for %r", f, path)
                 ret = f(path, *args, **kwargs)
             else:
                 lgr.debug("Calling memoized version of %s for %s", f, path)
                 # If there is a fingerprint -- inject it into the signature
                 kwargs_ = kwargs.copy()
-                kwargs_[fingerprint_kwarg] = tuple(fprint) + (
-                    tuple(self._tokens) if self._tokens else tuple()
+                kwargs_[fingerprint_kwarg] = fprint.to_tuple() + (
+                    tuple(self._tokens) if self._tokens else ()
                 )
                 ret = fingerprinted(path, *args, **kwargs_)
             lgr.log(1, "Returning value %r", ret)
@@ -128,8 +128,60 @@ class PersistentCache(object):
             # we can't take everything, since atime can change, etc.
             # So let's take some
             s = os.stat(path, follow_symlinks=True)
-            fprint = s.st_mtime_ns, s.st_ctime_ns, s.st_size
+            fprint = FileFingerprint.from_stat(s)
             lgr.log(5, "Fingerprint for %s: %s", path, fprint)
             return fprint
         except Exception as exc:
             lgr.debug(f"Cannot fingerprint {path}: {exc}")
+
+    @staticmethod
+    def _get_dir_fingerprint(path):
+        fprint = DirFingerprint()
+        dirqueue = deque([path])
+        try:
+            while dirqueue:
+                d = dirqueue.popleft()
+                with os.scandir(d) as entries:
+                    for e in entries:
+                        if e.is_dir(follow_symlinks=True):
+                            dirqueue.append(e.path)
+                        else:
+                            s = e.stat(follow_symlinks=True)
+                            fprint.add_file(e.path, FileFingerprint.from_stat(s))
+        except Exception as exc:
+            lgr.debug(f"Cannot fingerprint {path}: {exc}")
+            return None
+        else:
+            return fprint
+
+
+class FileFingerprint(namedtuple("FileFingerprint", "mtime_ns ctime_ns size")):
+    @classmethod
+    def from_stat(cls, s):
+        return cls(s.st_mtime_ns, s.st_ctime_ns, s.st_size)
+
+    def modified_in_window(self, min_dtime):
+        return abs(time.time() - self.mtime_ns * 1e-9) < min_dtime
+
+    def to_tuple(self):
+        return tuple(self)
+
+
+class DirFingerprint:
+    def __init__(self):
+        self.last_modified = None
+        self.tree_fprints = {}
+
+    def add_file(self, path, fprint: FileFingerprint):
+        self.tree_fprints[path] = fprint
+        if self.last_modified is None or self.last_modified < fprint.mtime_ns:
+            self.last_modified = fprint.mtime_ns
+
+    def modified_in_window(self, min_dtime):
+        if self.last_modified is None:
+            return False
+        else:
+            return abs(time.time() - self.last_modified * 1e-9) < min_dtime
+
+    def to_tuple(self):
+        return sum(sorted(self.tree_fprints.items()), ())
