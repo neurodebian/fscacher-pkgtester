@@ -230,3 +230,35 @@ def test_memoize_path_tokens(tmp_path, cache, cache_tokens):
     # They both are independent, so both will cause a new readout
     check_new_memoread(memoread, 0, "content")
     check_new_memoread(memoread_tokens, 0, "content")
+
+
+@pytest.mark.parametrize(
+    "fscacher_value,mycache_value,cleared,ignored",
+    [
+        ("clear", None, True, False),
+        ("q", "clear", True, False),
+        ("ignore", "clear", True, False),
+        ("clear", "", False, False),
+        ("clear", "q", False, False),
+        ("ignore", None, False, True),
+        ("q", "ignore", False, True),
+        ("clear", "ignore", False, True),
+        ("ignore", "", False, False),
+        ("ignore", "q", False, False),
+    ],
+)
+def test_cache_control_envvar(
+    mocker, monkeypatch, fscacher_value, mycache_value, cleared, ignored
+):
+    if fscacher_value is not None:
+        monkeypatch.setenv("FSCACHER_CACHE", fscacher_value)
+    else:
+        monkeypatch.delenv("FSCACHER_CACHE", raising=False)
+    if mycache_value is not None:
+        monkeypatch.setenv("MYCACHE_CONTROL", mycache_value)
+    else:
+        monkeypatch.delenv("MYCACHE_CONTROL", raising=False)
+    clear_spy = mocker.spy(PersistentCache, "clear")
+    c = PersistentCache(name="test-cache-control-envvar", envvar="MYCACHE_CONTROL")
+    assert clear_spy.called is cleared
+    assert c._ignore_cache is ignored

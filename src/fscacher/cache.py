@@ -17,9 +17,9 @@ class PersistentCache(object):
     _min_dtime = 0.01  # min difference between now and mtime to consider
     # for caching
 
-    _cache_var_values = ("", "clear", "ignore")
+    _cache_var_values = (None, "", "clear", "ignore")
 
-    def __init__(self, name=None, tokens=None):
+    def __init__(self, name=None, tokens=None, envvar=None):
         """
 
         Parameters
@@ -29,19 +29,28 @@ class PersistentCache(object):
          To add to the fingerprint of @memoize_path (regular @memoize ATM does
          not use it).  Could be e.g. versions of relevant/used
          python modules (pynwb, etc)
+        envvar: str, optional
+         Name of the environment variable to query for cache settings; if not
+         set, `FSCACHER_CACHE` is used
         """
         dirs = appdirs.AppDirs("fscacher")
         self._cache_file = op.join(dirs.user_cache_dir, (name or "cache"))
         self._memory = joblib.Memory(self._cache_file, verbose=0)
-        cache_var = os.environ.get("DANDI_CACHE", "").lower()
-        if cache_var not in self._cache_var_values:
+        cntrl_value = None
+        if envvar is not None:
+            cntrl_var = envvar
+            cntrl_value = os.environ.get(cntrl_var)
+        if cntrl_value is None:
+            cntrl_var = "FSCACHER_CACHE"
+            cntrl_value = os.environ.get(cntrl_var)
+        if cntrl_value not in self._cache_var_values:
             lgr.warning(
-                f"DANDI_CACHE={cache_var} is not understood and thus ignored. "
-                f"Known values are {self._cache_var_values}"
+                f"{cntrl_var}={cntrl_value} is not understood and thus ignored."
+                f" Known values are {self._cache_var_values}"
             )
-        if cache_var == "clear":
+        if cntrl_value == "clear":
             self.clear()
-        self._ignore_cache = cache_var == "ignore"
+        self._ignore_cache = cntrl_value == "ignore"
         self._tokens = tokens
 
     def clear(self):
