@@ -1,0 +1,84 @@
+name: Benchmark
+
+on:
+    pull_request:
+    push:
+
+jobs:
+    test:
+        runs-on: ubuntu-latest
+        strategy:
+            fail-fast: false
+            matrix:
+                python-version:
+                    - '3.6'
+                    - '3.7'
+                    - '3.8'
+                    - '3.9'
+                    - pypy3
+        steps:
+            - name: Check out repository
+              uses: actions/checkout@v2
+              with:
+                fetch-depth: 0
+
+            - name: Set up Python
+              uses: actions/setup-python@v2
+              with:
+                python-version: ${{ matrix.python-version }}
+
+            - name: Install dependencies
+              run: |
+                python -m pip install --upgrade pip wheel
+                python -m pip install --upgrade --upgrade-strategy=eager \
+                    asv virtualenv
+
+            - name: Create NFS file system
+              run: |
+                mkdir /tmp/nfs_ /tmp/nfs
+                echo "/tmp/nfs_ localhost(rw)" | sudo tee /etc/exports
+                sudo apt-get install -y nfs-kernel-server
+                sudo exportfs -a
+                sudo mount -t nfs localhost:/tmp/nfs_ /tmp/nfs
+
+            - name: Create VFAT file system
+              run: |
+                sudo apt-get update -qq
+                sudo apt-get install dosfstools
+                image=/tmp/vfat.img
+                sudo dd if=/dev/zero "of=$image" count=500 bs=1M
+                sudo mkfs.vfat "$image"
+                CRIPPLEDFS_PATH=/tmp/vfat
+                sudo mkdir "$CRIPPLEDFS_PATH"
+                sudo mount -o "uid=$(id -u),gid=$(id -g)" "$image" "$CRIPPLEDFS_PATH"
+
+            - name: Set FSCACHER_BENCH_TMPDIRS environment variable
+              run: echo "FSCACHER_BENCH_TMPDIRS=.:/tmp/nfs:/tmp/vfat" >> "$GITHUB_ENV"
+
+            - name: Set up machine profile
+              run: asv machine --yes
+
+            - name: Save comparison points as GitHub refs
+              run: |
+                # If this is a PR run, then HEAD is a refs/pull/:number/merge
+                # ref and HEAD^1 is the target that the PR will be merged into.
+
+                # If this is a push run, then HEAD is the most recently-pushed
+                # commit and HEAD^1 is the commit before it (which may or may
+                # not be the previous HEAD for the branch, depending on whether
+                # multiple commits were pushed at once).
+
+                git update-ref refs/bm/pr HEAD
+                git update-ref refs/bm/merge-target HEAD^1
+
+            - name: Run benchmarks on newest code
+              run: asv run HEAD^-1
+
+            - name: Check out previous code
+              run: git checkout --force refs/bm/merge-target
+
+            - name: Run benchmarks on previous code
+              run: asv run HEAD^-1
+
+            - name: Compare benchmarks on previous & newest code
+              run: asv compare refs/bm/merge-target refs/bm/pr
