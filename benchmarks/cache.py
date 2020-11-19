@@ -9,7 +9,15 @@ from morecontext import envset
 from fscacher import PersistentCache
 
 
-class TimeFile:
+class Benchmark:
+    """Common parameters for the benchmarks"""
+    # how many times to rerun for a sample
+    number = 30
+    processes = 1  # do not parallelize
+
+
+class TimeFile(Benchmark):
+
     FILE_SIZE = 1024
     param_names = ["control"]
     params = (["", "ignore"])
@@ -42,7 +50,8 @@ class TimeFile:
         self.cache.clear()
 
 
-class TimeDirectoryFlat:
+class TimeDirectoryFlat(Benchmark):
+
     LAYOUT = (100,)
 
     param_names = ["control", "tmpdir"]
