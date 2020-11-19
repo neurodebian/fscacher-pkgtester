@@ -11,41 +11,39 @@ from fscacher import PersistentCache
 
 class TimeFile:
     FILE_SIZE = 1024
-    param_names = ["n", "control"]
-    params = ([10, 100, 10000], ["", "ignore"])
+    param_names = ["control"]
+    params = (["", "ignore"])
 
     def setup_cache(self):
         with open("foo.dat", "wb") as fp:
             fp.write(bytes(random.choices(range(256), k=self.FILE_SIZE)))
 
-    def setup(self, n, control):
+    def setup(self, control):
         with envset("FSCACHER_CACHE", control):
             self.cache = PersistentCache(name=str(uuid4()))
 
-    def time_file(self, n, control):
+    def time_file(self, control):
         @self.cache.memoize_path
         def hashfile(path):
             with open(path, "rb") as fp:
                 return sha256(fp.read()).hexdigest()
 
-        for _ in range(n):
-            hashfile("foo.dat")
+        hashfile("foo.dat")
 
-    def teardown(self, n, control):
+    def teardown(self, control):
         self.cache.clear()
 
 
 class TimeDirectoryFlat:
     LAYOUT = (100,)
 
-    param_names = ["n", "control", "tmpdir"]
+    param_names = ["control", "tmpdir"]
     params = (
-        [10, 100, 1000],
         ["", "ignore"],
         os.environ.get("FSCACHER_BENCH_TMPDIRS", ".").split(":"),
     )
 
-    def setup(self, n, control, tmpdir):
+    def setup(self, control, tmpdir):
         cache_id = str(uuid4())
         with envset("FSCACHER_CACHE", control):
             self.cache = PersistentCache(name=cache_id)
@@ -53,7 +51,7 @@ class TimeDirectoryFlat:
         self.dir.mkdir()
         create_tree(self.dir, self.LAYOUT)
 
-    def time_directory(self, n, control, tmpdir):
+    def time_directory(self, control, tmpdir):
         @self.cache.memoize_path
         def dirsize(path):
             total_size = 0
@@ -65,8 +63,7 @@ class TimeDirectoryFlat:
                         total_size += e.stat().st_size
             return total_size
 
-        for _ in range(n):
-            dirsize(str(self.dir))
+        dirsize(str(self.dir))
 
     def teardown(self, *args, **kwargs):
         self.cache.clear()
