@@ -3,49 +3,55 @@ import os
 from pathlib import Path
 import random
 import shutil
-from time import time
+from time import sleep, time
 from uuid import uuid4
 from morecontext import envset
 from fscacher import PersistentCache
 
 
 class TimeFile:
+
     FILE_SIZE = 1024
-    param_names = ["n", "control"]
-    params = ([10, 100, 10000], ["", "ignore"])
+    param_names = ["control"]
+    params = (["", "ignore"])
 
     def setup_cache(self):
         with open("foo.dat", "wb") as fp:
             fp.write(bytes(random.choices(range(256), k=self.FILE_SIZE)))
 
-    def setup(self, n, control):
+    def setup(self, control):
         with envset("FSCACHER_CACHE", control):
             self.cache = PersistentCache(name=str(uuid4()))
 
-    def time_file(self, n, control):
         @self.cache.memoize_path
         def hashfile(path):
+            # "emulate" slow invocation so significant raise in benchmark
+            # consumed time would mean that we invoked it instead
+            # of using cached value
+            sleep(0.01)
             with open(path, "rb") as fp:
                 return sha256(fp.read()).hexdigest()
+        self._hashfile = hashfile
 
-        for _ in range(n):
-            hashfile("foo.dat")
+    def time_file(self, control):
+        for _ in range(100):
+            self._hashfile("foo.dat")
 
-    def teardown(self, n, control):
+    def teardown(self, control):
         self.cache.clear()
 
 
 class TimeDirectoryFlat:
+
     LAYOUT = (100,)
 
-    param_names = ["n", "control", "tmpdir"]
+    param_names = ["control", "tmpdir"]
     params = (
-        [10, 100, 1000],
         ["", "ignore"],
         os.environ.get("FSCACHER_BENCH_TMPDIRS", ".").split(":"),
     )
 
-    def setup(self, n, control, tmpdir):
+    def setup(self, control, tmpdir):
         cache_id = str(uuid4())
         with envset("FSCACHER_CACHE", control):
             self.cache = PersistentCache(name=cache_id)
@@ -53,7 +59,6 @@ class TimeDirectoryFlat:
         self.dir.mkdir()
         create_tree(self.dir, self.LAYOUT)
 
-    def time_directory(self, n, control, tmpdir):
         @self.cache.memoize_path
         def dirsize(path):
             total_size = 0
@@ -64,9 +69,11 @@ class TimeDirectoryFlat:
                     else:
                         total_size += e.stat().st_size
             return total_size
+        self._dirsize = dirsize
 
-        for _ in range(n):
-            dirsize(str(self.dir))
+    def time_directory(self, control, tmpdir):
+        for _ in range(100):
+            self._dirsize(str(self.dir))
 
     def teardown(self, *args, **kwargs):
         self.cache.clear()
