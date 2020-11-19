@@ -9,14 +9,7 @@ from morecontext import envset
 from fscacher import PersistentCache
 
 
-class Benchmark:
-    """Common parameters for the benchmarks"""
-    # how many times to rerun for a sample
-    number = 30
-    processes = 1  # do not parallelize
-
-
-class TimeFile(Benchmark):
+class TimeFile:
 
     FILE_SIZE = 1024
     param_names = ["control"]
@@ -39,18 +32,16 @@ class TimeFile(Benchmark):
             with open(path, "rb") as fp:
                 return sha256(fp.read()).hexdigest()
         self._hashfile = hashfile
-        # Perform initial invocation, so we do not taint actual
-        # timing by invocation of the function
-        self._hashfile_target = hashfile("foo.dat")
 
     def time_file(self, control):
-        assert self._hashfile("foo.dat") == self._hashfile_target
+        for _ in range(100):
+            self._hashfile("foo.dat")
 
     def teardown(self, control):
         self.cache.clear()
 
 
-class TimeDirectoryFlat(Benchmark):
+class TimeDirectoryFlat:
 
     LAYOUT = (100,)
 
@@ -79,10 +70,10 @@ class TimeDirectoryFlat(Benchmark):
                         total_size += e.stat().st_size
             return total_size
         self._dirsize = dirsize
-        self._dirsize_target = dirsize(str(self.dir))
 
     def time_directory(self, control, tmpdir):
-        assert self._dirsize(str(self.dir)) == self._dirsize_target
+        for _ in range(100):
+            self._dirsize(str(self.dir))
 
     def teardown(self, *args, **kwargs):
         self.cache.clear()
