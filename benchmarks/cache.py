@@ -3,7 +3,7 @@ import os
 from pathlib import Path
 import random
 import shutil
-from time import time
+from time import sleep, time
 from uuid import uuid4
 from morecontext import envset
 from fscacher import PersistentCache
@@ -22,13 +22,21 @@ class TimeFile:
         with envset("FSCACHER_CACHE", control):
             self.cache = PersistentCache(name=str(uuid4()))
 
-    def time_file(self, control):
         @self.cache.memoize_path
         def hashfile(path):
+            # "emulate" slow invocation so significant raise in benchmark
+            # consumed time would mean that we invoked it instead
+            # of using cached value
+            sleep(0.01)
             with open(path, "rb") as fp:
                 return sha256(fp.read()).hexdigest()
+        self._hashfile = hashfile
+        # Perform initial invocation, so we do not taint actual
+        # timing by invocation of the function
+        self._hashfile_target = hashfile("foo.dat")
 
-        hashfile("foo.dat")
+    def time_file(self, control):
+        assert self._hashfile("foo.dat") == self._hashfile_target
 
     def teardown(self, control):
         self.cache.clear()
@@ -51,7 +59,6 @@ class TimeDirectoryFlat:
         self.dir.mkdir()
         create_tree(self.dir, self.LAYOUT)
 
-    def time_directory(self, control, tmpdir):
         @self.cache.memoize_path
         def dirsize(path):
             total_size = 0
@@ -62,8 +69,11 @@ class TimeDirectoryFlat:
                     else:
                         total_size += e.stat().st_size
             return total_size
+        self._dirsize = dirsize
+        self._dirsize_target = dirsize(str(self.dir))
 
-        dirsize(str(self.dir))
+    def time_directory(self, control, tmpdir):
+        assert self._dirsize(str(self.dir)) == self._dirsize_target
 
     def teardown(self, *args, **kwargs):
         self.cache.clear()
