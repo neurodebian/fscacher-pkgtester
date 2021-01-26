@@ -155,10 +155,10 @@ class PersistentCache(object):
             return fprint
 
 
-class FileFingerprint(namedtuple("FileFingerprint", "mtime_ns ctime_ns size")):
+class FileFingerprint(namedtuple("FileFingerprint", "mtime_ns ctime_ns size inode")):
     @classmethod
     def from_stat(cls, s):
-        return cls(s.st_mtime_ns, s.st_ctime_ns, s.st_size)
+        return cls(s.st_mtime_ns, s.st_ctime_ns, s.st_size, s.st_ino)
 
     def modified_in_window(self, min_dtime):
         return abs(time.time() - self.mtime_ns * 1e-9) < min_dtime
