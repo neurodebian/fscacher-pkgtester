@@ -15,6 +15,7 @@
 `GitHub <https://github.com/con/fscacher>`_
 | `PyPI <https://pypi.org/project/fscacher/>`_
 | `Issues <https://github.com/con/fscacher/issues>`_
+| `Changelog <https://github.com/con/fscacher/blob/master/CHANGELOG.md>`_
 
 ``fscacher`` provides a cache & decorator for memoizing functions whose outputs
 depend upon the contents of a file argument.
