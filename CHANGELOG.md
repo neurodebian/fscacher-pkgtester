@@ -1,3 +1,15 @@
+# 0.1.2 (Mon Feb 22 2021)
+
+#### 🐛 Bug Fix
+
+- Get auto and versioneer to play nice together [#31](https://github.com/con/fscacher/pull/31) ([@jwodder](https://github.com/jwodder))
+
+#### Authors: 1
+
+- John T. Wodder II ([@jwodder](https://github.com/jwodder))
+
+---
+
 # 0.1.1 (Mon Feb 22 2021)
 
 #### 🐛 Bug Fix
