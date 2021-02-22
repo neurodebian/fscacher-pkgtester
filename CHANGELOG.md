@@ -1,3 +1,15 @@
+# 0.1.4 (Mon Feb 22 2021)
+
+#### 🐛 Bug Fix
+
+- Fix versioneer+auto integration (or else) [#33](https://github.com/con/fscacher/pull/33) ([@jwodder](https://github.com/jwodder))
+
+#### Authors: 1
+
+- John T. Wodder II ([@jwodder](https://github.com/jwodder))
+
+---
+
 # 0.1.3 (Mon Feb 22 2021)
 
 #### 🐛 Bug Fix
