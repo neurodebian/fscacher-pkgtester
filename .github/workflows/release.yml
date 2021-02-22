@@ -58,8 +58,6 @@ jobs:
           fetch-depth: 0
           ref: ${{ steps.latest-release.outputs.tag }}
 
-      - run: git --no-pager tag
-
       - name: Set up Python
         uses: actions/setup-python@v2
         with:
