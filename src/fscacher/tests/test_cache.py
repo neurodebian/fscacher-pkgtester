@@ -191,15 +191,15 @@ def test_memoize_path_dir(cache, tmp_path):
     assert len(calls) == 2
 
     path.mkdir()
-    (path / "a.txt").write_text("Alpha\n")
-    (path / "b.txt").write_text("Beta\n")
+    (path / "a.txt").write_text("Alpha")
+    (path / "b.txt").write_text("Beta")
 
     t0 = time.time()
     try:
         # unless this computer is too slow -- there should be less than
         # cache._min_dtime between our creating the file and testing,
         # so we would force a direct read:
-        check_new_memoread(0, 11, True)
+        check_new_memoread(0, 9, True)
     except AssertionError:  # pragma: no cover
         # if computer is indeed slow (happens on shared CIs) we might fail
         # because distance is too short
@@ -209,17 +209,17 @@ def test_memoize_path_dir(cache, tmp_path):
 
     # but if we sleep - should memoize
     time.sleep(cache._min_dtime * 1.1)
-    check_new_memoread(1, 11)
+    check_new_memoread(1, 9)
 
     # and if we modify the file -- a new read
     time.sleep(cache._min_dtime * 1.1)
-    (path / "c.txt").write_text("Gamma\n")
+    (path / "c.txt").write_text("Gamma")
     ncalls = len(calls)
-    assert memoread(path, 1) == 17
+    assert memoread(path, 1) == 14
     assert len(calls) == ncalls + 1
 
     time.sleep(cache._min_dtime * 1.1)
-    check_new_memoread(0, 17)
+    check_new_memoread(0, 14)
 
     # Check that symlinks should be dereferenced
     if not on_windows or sys.version_info[:2] >= (3, 8):
@@ -232,12 +232,12 @@ def test_memoize_path_dir(cache, tmp_path):
             pass
         if op.islink(symlink1):  # hopefully would just skip Windows if not supported
             ncalls = len(calls)
-            assert memoread(symlink1, 0) == 17
+            assert memoread(symlink1, 0) == 14
             assert len(calls) == ncalls  # no new call
 
     # and if we "clear", would it still work?
     cache.clear()
-    check_new_memoread(1, 17)
+    check_new_memoread(1, 14)
 
 
 def test_memoize_path_persist(tmp_path):
