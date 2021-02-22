@@ -1,3 +1,15 @@
+# 0.1.3 (Mon Feb 22 2021)
+
+#### 🐛 Bug Fix
+
+- Try to debug versioneer failure [#32](https://github.com/con/fscacher/pull/32) ([@jwodder](https://github.com/jwodder))
+
+#### Authors: 1
+
+- John T. Wodder II ([@jwodder](https://github.com/jwodder))
+
+---
+
 # 0.1.2 (Mon Feb 22 2021)
 
 #### 🐛 Bug Fix
