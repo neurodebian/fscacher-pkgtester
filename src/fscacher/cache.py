@@ -1,5 +1,6 @@
 from collections import deque, namedtuple
 from functools import wraps
+from inspect import Parameter, signature
 import logging
 import os
 import os.path as op
@@ -76,12 +77,23 @@ class PersistentCache(object):
         # we need to actually decorate a function
         fingerprint_kwarg = "_cache_fingerprint"
 
-        @self.memoize
         @wraps(f)  # important, so .memoize correctly caches different `f`
         def fingerprinted(path, *args, **kwargs):
             _ = kwargs.pop(fingerprint_kwarg)  # discard
             lgr.debug("Running original %s on %r", f, path)
             return f(path, *args, **kwargs)
+
+        # We need to add the fingerprint_kwarg to fingerprinted's signature so
+        # that joblib doesn't complain:
+        sig = signature(fingerprinted)
+        fp_kwarg_param = Parameter(
+            fingerprint_kwarg, Parameter.KEYWORD_ONLY, default=None
+        )
+        sig2 = sig.replace(
+            parameters=tuple(sig.parameters.values()) + (fp_kwarg_param,)
+        )
+        fingerprinted.__signature__ = sig2
+        fingerprinted = self.memoize(fingerprinted)
 
         @wraps(f)
         def fingerprinter(path, *args, **kwargs):
