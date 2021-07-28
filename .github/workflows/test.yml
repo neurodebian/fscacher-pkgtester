@@ -42,6 +42,14 @@ jobs:
                 python -m pip install --upgrade pip wheel
                 python -m pip install --upgrade --upgrade-strategy=eager tox
 
+            - name: Install git annex (Ubuntu)
+              if: startsWith(matrix.os, 'ubuntu')
+              run: sudo apt-get update && sudo apt-get install -y git-annex
+
+            - name: Install git annex (macOS)
+              if: startsWith(matrix.os, 'macos')
+              run: brew install git-annex
+
             - name: Run tests
               if: matrix.toxenv == 'py'
               run: tox -e py -- --cov-report=xml

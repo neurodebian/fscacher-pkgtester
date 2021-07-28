@@ -2,6 +2,8 @@ import os
 import os.path as op
 import platform
 import random
+import shutil
+import subprocess
 import sys
 import time
 import pytest
@@ -342,3 +344,47 @@ def test_cache_control_envvar(
     c = PersistentCache(name="test-cache-control-envvar", envvar="MYCACHE_CONTROL")
     assert clear_spy.called is cleared
     assert c._ignore_cache is ignored
+
+
+@pytest.mark.skipif(shutil.which("git-annex") is None, reason="git annex required")
+def test_follow_moved_symlink(cache, tmp_path):
+    calls = []
+
+    @cache.memoize_path
+    def memoread(path):
+        calls.append([path])
+        with open(path) as f:
+            return f.read()
+
+    def git(*args):
+        subprocess.run(["git", *args], cwd=tmp_path, check=True)
+
+    content = "This is test text.\n"
+    git("init")
+    git("annex", "init")
+    (tmp_path / "file.txt").write_text(content)
+    git("annex", "add", "file.txt")
+    git("commit", "-m", "Create file")
+    assert op.islink(tmp_path / "file.txt")
+
+    assert memoread(tmp_path / "file.txt") == content
+    assert len(calls) == 1
+    assert memoread(tmp_path / "file.txt") == content
+    assert len(calls) == 1
+
+    git("mv", "file.txt", "text.txt")
+    git("commit", "-m", "Rename file")
+
+    assert memoread(tmp_path / "text.txt") == content
+    assert len(calls) == 1
+    assert memoread(tmp_path / "text.txt") == content
+    assert len(calls) == 1
+
+    (tmp_path / "subdir").mkdir()
+    git("mv", "text.txt", op.join("subdir", "text.txt"))
+    git("commit", "-m", "Move file")
+
+    assert memoread(tmp_path / "subdir" / "text.txt") == content
+    assert len(calls) == 1
+    assert memoread(tmp_path / "subdir" / "text.txt") == content
+    assert len(calls) == 1
