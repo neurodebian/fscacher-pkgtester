@@ -1,3 +1,20 @@
+# 0.1.6 (Thu Oct 07 2021)
+
+#### 🐛 Bug Fix
+
+- Revert "Limit joblib version to pre-1.1.0" [#52](https://github.com/con/fscacher/pull/52) ([@jwodder](https://github.com/jwodder))
+
+#### 🧪 Tests
+
+- Test against Python 3.10 [#49](https://github.com/con/fscacher/pull/49) ([@jwodder](https://github.com/jwodder))
+- Change pypy3 to pypy-3.7 on GitHub Actions [#50](https://github.com/con/fscacher/pull/50) ([@jwodder](https://github.com/jwodder))
+
+#### Authors: 1
+
+- John T. Wodder II ([@jwodder](https://github.com/jwodder))
+
+---
+
 # 0.1.5 (Thu Oct 07 2021)
 
 #### 🐛 Bug Fix
