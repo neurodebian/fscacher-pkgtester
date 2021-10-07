@@ -1,3 +1,25 @@
+# 0.1.5 (Thu Oct 07 2021)
+
+#### 🐛 Bug Fix
+
+- Limit joblib version to pre-1.1.0 [#48](https://github.com/con/fscacher/pull/48) ([@jwodder](https://github.com/jwodder))
+- Test against and update for dev version of joblib [#42](https://github.com/con/fscacher/pull/42) ([@jwodder](https://github.com/jwodder))
+
+#### 🏠 Internal
+
+- Resimplify release workflow [#35](https://github.com/con/fscacher/pull/35) ([@jwodder](https://github.com/jwodder))
+- Remove debug step [#34](https://github.com/con/fscacher/pull/34) ([@jwodder](https://github.com/jwodder))
+
+#### 🧪 Tests
+
+- Test handling of moving symlinks around in git-annex [#47](https://github.com/con/fscacher/pull/47) ([@jwodder](https://github.com/jwodder))
+
+#### Authors: 1
+
+- John T. Wodder II ([@jwodder](https://github.com/jwodder))
+
+---
+
 # 0.1.4 (Mon Feb 22 2021)
 
 #### 🐛 Bug Fix
