@@ -68,10 +68,10 @@ class PersistentCache(object):
         except Exception as exc:
             lgr.warning(f"Failed to clear out the cache directory: {exc}")
 
-    def memoize(self, f):
+    def memoize(self, f, ignore=None):
         if self._ignore_cache:
             return f
-        return self._memory.cache(f)
+        return self._memory.cache(f, ignore=ignore)
 
     def memoize_path(self, f):
         # we need to actually decorate a function
@@ -93,14 +93,22 @@ class PersistentCache(object):
             parameters=tuple(sig.parameters.values()) + (fp_kwarg_param,)
         )
         fingerprinted.__signature__ = sig2
-        fingerprinted = self.memoize(fingerprinted)
+
+        path_arg = next(iter(sig.parameters.keys()))
+
+        # we need to ignore 'path' since we would like to dereference if symlink
+        # but then expect joblib's caching work on both original and dereferenced
+        # So we will add dereferenced path into fingerprint_kwarg
+        fingerprinted = self.memoize(fingerprinted, ignore=[path_arg])
 
         @wraps(f)
-        def fingerprinter(path, *args, **kwargs):
+        def fingerprinter(*args, **kwargs):
             # we need to dereference symlinks and use that path in the function
             # call signature
-            path_orig = path
-            path = op.realpath(path)
+            bound = sig.bind(*args, **kwargs)
+            bound.apply_defaults()
+            path_orig = bound.arguments[path_arg]
+            path = op.realpath(path_orig)
             if path != path_orig:
                 lgr.log(5, "Dereferenced %r into %r", path_orig, path)
             if op.isdir(path):
@@ -111,21 +119,23 @@ class PersistentCache(object):
                 lgr.debug("Calling %s directly since no fingerprint for %r", f, path)
                 # just call the function -- we have no fingerprint,
                 # probably does not exist or permissions are wrong
-                ret = f(path, *args, **kwargs)
+                ret = f(*args, **kwargs)
             # We should still pass through if file was modified just now,
             # since that could mask out quick modifications.
             # Target use cases will not be like that.
             elif fprint.modified_in_window(self._min_dtime):
                 lgr.debug("Calling %s directly since too short for %r", f, path)
-                ret = f(path, *args, **kwargs)
+                ret = f(*args, **kwargs)
             else:
                 lgr.debug("Calling memoized version of %s for %s", f, path)
                 # If there is a fingerprint -- inject it into the signature
                 kwargs_ = kwargs.copy()
-                kwargs_[fingerprint_kwarg] = fprint.to_tuple() + (
-                    tuple(self._tokens) if self._tokens else ()
+                kwargs_[fingerprint_kwarg] = (
+                    (path,)
+                    + fprint.to_tuple()
+                    + (tuple(self._tokens) if self._tokens else ())
                 )
-                ret = fingerprinted(path, *args, **kwargs_)
+                ret = fingerprinted(*args, **kwargs_)
             lgr.log(1, "Returning value %r", ret)
             return ret
 
