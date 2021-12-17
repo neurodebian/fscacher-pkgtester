@@ -13,7 +13,7 @@ class TimeFile:
 
     FILE_SIZE = 1024
     param_names = ["control"]
-    params = (["", "ignore"])
+    params = ["", "ignore"]
 
     def setup_cache(self):
         with open("foo.dat", "wb") as fp:
@@ -31,13 +31,14 @@ class TimeFile:
             sleep(0.01)
             with open(path, "rb") as fp:
                 return sha256(fp.read()).hexdigest()
+
         self._hashfile = hashfile
 
-    def time_file(self, control):
+    def time_file(self, _control):
         for _ in range(100):
             self._hashfile("foo.dat")
 
-    def teardown(self, control):
+    def teardown(self, _control):
         self.cache.clear()
 
 
@@ -46,10 +47,7 @@ class TimeDirectoryFlat:
     LAYOUT = (100,)
 
     param_names = ["control", "tmpdir"]
-    params = (
-        ["", "ignore"],
-        os.environ.get("FSCACHER_BENCH_TMPDIRS", ".").split(":"),
-    )
+    params = (["", "ignore"], os.environ.get("FSCACHER_BENCH_TMPDIRS", ".").split(":"))
 
     def setup(self, control, tmpdir):
         cache_id = str(uuid4())
@@ -69,13 +67,14 @@ class TimeDirectoryFlat:
                     else:
                         total_size += e.stat().st_size
             return total_size
+
         self._dirsize = dirsize
 
-    def time_directory(self, control, tmpdir):
+    def time_directory(self, _control, _tmpdir):
         for _ in range(100):
             self._dirsize(str(self.dir))
 
-    def teardown(self, *args, **kwargs):
+    def teardown(self, *_args, **_kwargs):
         self.cache.clear()
         shutil.rmtree(self.dir)
 
