@@ -16,6 +16,11 @@ on_windows = platform_system == "windows"
 _cache_name = "test-%d" % random.randint(1, 1000)
 
 
+@pytest.fixture(autouse=True)
+def capture_all_logs(caplog):
+    caplog.set_level(1, logger="fscacher")
+
+
 @pytest.fixture(scope="function")
 def cache():
     c = PersistentCache(name=_cache_name)
