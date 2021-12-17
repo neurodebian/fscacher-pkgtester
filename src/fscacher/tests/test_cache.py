@@ -248,7 +248,7 @@ def test_memoize_path_dir(cache, tmp_path):
 
 
 def test_memoize_path_persist(tmp_path):
-    from subprocess import run, PIPE
+    from subprocess import PIPE, run
 
     cache_name = op.basename(tmp_path)
     script = op.join(tmp_path, "script.py")
