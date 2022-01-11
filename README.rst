@@ -44,6 +44,10 @@ non-`path-like object
 <https://docs.python.org/3/glossary.html#term-path-like-object>`_ as the value
 of ``path``, the cache is ignored.
 
+``memoize_path()`` optionally takes an ``exclude_kwargs`` argument, which must
+be a sequence of names of arguments of the decorated function that will be
+ignored for caching purposes.
+
 Caches are stored on-disk and thus persist between Python runs.  To clear a
 given ``PersistentCache`` and erase its data store, call the ``clear()``
 method.
