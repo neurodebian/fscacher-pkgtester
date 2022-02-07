@@ -27,7 +27,7 @@ jobs:
                     - py
                 include:
                     - os: ubuntu-latest
-                      python-version: '3.6'
+                      python-version: '3.7'
                       toxenv: py-dev
                     - os: ubuntu-latest
                       python-version: '3.6'
