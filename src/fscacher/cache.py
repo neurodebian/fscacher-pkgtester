@@ -1,7 +1,9 @@
 from collections import deque, namedtuple
 from functools import wraps
+from hashlib import md5
 from inspect import Parameter, signature
 import logging
+from operator import xor
 import os
 import os.path as op
 import shutil
@@ -195,12 +197,19 @@ class FileFingerprint(namedtuple("FileFingerprint", "mtime_ns ctime_ns size inod
 class DirFingerprint:
     def __init__(self):
         self.last_modified = None
-        self.tree_fprints = {}
+        self.hash_ords = None
 
     def add_file(self, path, fprint: FileFingerprint):
-        self.tree_fprints[path] = fprint
-        if self.last_modified is None or self.last_modified < fprint.mtime_ns:
+        fprint_hash = list(
+            md5(ascii((str(path), fprint.to_tuple())).encode("us-ascii")).digest()
+        )
+        if self.hash_ords is None:
+            self.hash_ords = fprint_hash
             self.last_modified = fprint.mtime_ns
+        else:
+            self.hash_ords = list(map(xor, self.hash_ords, fprint_hash))
+            if self.last_modified < fprint.mtime_ns:
+                self.last_modified = fprint.mtime_ns
 
     def modified_in_window(self, min_dtime):
         if self.last_modified is None:
@@ -209,4 +218,7 @@ class DirFingerprint:
             return abs(time.time() - self.last_modified * 1e-9) < min_dtime
 
     def to_tuple(self):
-        return sum(sorted(self.tree_fprints.items()), ())
+        if self.hash_ords is None:
+            return (None,)
+        else:
+            return (bytes(self.hash_ords).hex(),)
