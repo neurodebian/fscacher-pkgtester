@@ -74,6 +74,9 @@ class PersistentCache(object):
         return self._memory.cache(f, ignore=ignore)
 
     def memoize_path(self, f):
+        if self._ignore_cache:
+            return f
+
         # we need to actually decorate a function
         fingerprint_kwarg = "_cache_fingerprint"
 
