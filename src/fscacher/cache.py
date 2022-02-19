@@ -21,12 +21,18 @@ class PersistentCache(object):
 
     _cache_var_values = (None, "", "clear", "ignore")
 
-    def __init__(self, name=None, tokens=None, envvar=None):
+    def __init__(self, name=None, *, path=None, tokens=None, envvar=None):
         """
-
         Parameters
         ----------
-        name
+        name: str, optional
+         Basename for the directory in which to store the cache.  Mutually
+         exclusive with `path`.
+        path: str or pathlib.Path, optional
+         Directory path at which to store the cache.  If not specified, the
+         cache is stored in `USER_CACHE/fscacher/NAME`, where NAME is the value
+         of the `name` parameter (default: "cache").  Mutually exclusive with
+         `name`.
         tokens: list of objects, optional
          To add to the fingerprint of @memoize_path (regular @memoize ATM does
          not use it).  Could be e.g. versions of relevant/used
@@ -35,9 +41,12 @@ class PersistentCache(object):
          Name of the environment variable to query for cache settings; if not
          set, `FSCACHER_CACHE` is used
         """
-        dirs = appdirs.AppDirs("fscacher")
-        self._cache_file = op.join(dirs.user_cache_dir, (name or "cache"))
-        self._memory = joblib.Memory(self._cache_file, verbose=0)
+        if path is None:
+            dirs = appdirs.AppDirs("fscacher")
+            path = op.join(dirs.user_cache_dir, (name or "cache"))
+        elif name is not None:
+            raise ValueError("'name' and 'path' are mutually exclusive")
+        self._memory = joblib.Memory(path, verbose=0)
         cntrl_value = None
         if envvar is not None:
             cntrl_var = envvar

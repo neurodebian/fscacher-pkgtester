@@ -81,13 +81,13 @@ jobs:
                 echo "ASV_PYTHON=$ASV_PYTHON" >> "$GITHUB_ENV"
 
             - name: Run benchmarks on newest code
-              run: asv run --python "$ASV_PYTHON" HEAD^-1
+              run: asv run --strict --show-stderr --python "$ASV_PYTHON" HEAD^-1
 
             - name: Check out previous code
               run: git checkout --force refs/bm/merge-target
 
             - name: Run benchmarks on previous code
-              run: asv run --python "$ASV_PYTHON" HEAD^-1
+              run: asv run --strict --show-stderr --python "$ASV_PYTHON" HEAD^-1
 
             - name: Compare benchmarks on previous & newest code
               run: asv compare refs/bm/merge-target refs/bm/pr

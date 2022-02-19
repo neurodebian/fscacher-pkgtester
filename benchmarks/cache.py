@@ -10,7 +10,6 @@ from fscacher import PersistentCache
 
 
 class TimeFile:
-
     FILE_SIZE = 1024
     param_names = ["control"]
     params = ["", "ignore"]
@@ -21,7 +20,7 @@ class TimeFile:
 
     def setup(self, control):
         with envset("FSCACHER_CACHE", control):
-            self.cache = PersistentCache(name=str(uuid4()))
+            self.cache = PersistentCache(path=str(uuid4()))
 
         @self.cache.memoize_path
         def hashfile(path):
@@ -52,9 +51,9 @@ class TimeDirectoryFlat:
     def setup(self, control, tmpdir):
         cache_id = str(uuid4())
         with envset("FSCACHER_CACHE", control):
-            self.cache = PersistentCache(name=cache_id)
-        self.dir = Path(tmpdir, cache_id)
-        self.dir.mkdir()
+            self.cache = PersistentCache(path=os.path.join("cache", cache_id))
+        self.dir = Path(tmpdir, "work", cache_id)
+        self.dir.mkdir(parents=True)
         create_tree(self.dir, self.LAYOUT)
 
         @self.cache.memoize_path
