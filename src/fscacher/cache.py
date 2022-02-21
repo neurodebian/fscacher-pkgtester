@@ -3,10 +3,10 @@ from functools import wraps
 from hashlib import md5
 from inspect import Parameter, signature
 import logging
-from operator import xor
 import os
 import os.path as op
 import shutil
+import sys
 import time
 import appdirs
 import joblib
@@ -200,14 +200,14 @@ class DirFingerprint:
         self.hash_ords = None
 
     def add_file(self, path, fprint: FileFingerprint):
-        fprint_hash = list(
-            md5(ascii((str(path), fprint.to_tuple())).encode("us-ascii")).digest()
-        )
+        fprint_hash = md5(
+            ascii((str(path), fprint.to_tuple())).encode("us-ascii")
+        ).digest()
         if self.hash_ords is None:
             self.hash_ords = fprint_hash
             self.last_modified = fprint.mtime_ns
         else:
-            self.hash_ords = list(map(xor, self.hash_ords, fprint_hash))
+            self.hash_ords = xor_bytes(self.hash_ords, fprint_hash)
             if self.last_modified < fprint.mtime_ns:
                 self.last_modified = fprint.mtime_ns
 
@@ -222,3 +222,10 @@ class DirFingerprint:
             return (None,)
         else:
             return (bytes(self.hash_ords).hex(),)
+
+
+def xor_bytes(b1: bytes, b2: bytes) -> bytes:
+    length = max(len(b1), len(b2))
+    i1 = int.from_bytes(b1, sys.byteorder)
+    i2 = int.from_bytes(b2, sys.byteorder)
+    return (i1 ^ i2).to_bytes(length, sys.byteorder)
