@@ -197,17 +197,17 @@ class FileFingerprint(namedtuple("FileFingerprint", "mtime_ns ctime_ns size inod
 class DirFingerprint:
     def __init__(self):
         self.last_modified = None
-        self.hash_ords = None
+        self.hash = None
 
     def add_file(self, path, fprint: FileFingerprint):
         fprint_hash = md5(
             ascii((str(path), fprint.to_tuple())).encode("us-ascii")
         ).digest()
-        if self.hash_ords is None:
-            self.hash_ords = fprint_hash
+        if self.hash is None:
+            self.hash = fprint_hash
             self.last_modified = fprint.mtime_ns
         else:
-            self.hash_ords = xor_bytes(self.hash_ords, fprint_hash)
+            self.hash = xor_bytes(self.hash, fprint_hash)
             if self.last_modified < fprint.mtime_ns:
                 self.last_modified = fprint.mtime_ns
 
@@ -218,10 +218,10 @@ class DirFingerprint:
             return abs(time.time() - self.last_modified * 1e-9) < min_dtime
 
     def to_tuple(self):
-        if self.hash_ords is None:
+        if self.hash is None:
             return (None,)
         else:
-            return (bytes(self.hash_ords).hex(),)
+            return (self.hash.hex(),)
 
 
 def xor_bytes(b1: bytes, b2: bytes) -> bytes:

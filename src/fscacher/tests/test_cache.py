@@ -8,6 +8,7 @@ import sys
 import time
 import pytest
 from .. import PersistentCache
+from ..cache import DirFingerprint, FileFingerprint
 
 platform_system = platform.system().lower()
 on_windows = platform_system == "windows"
@@ -415,3 +416,29 @@ def test_memoize_path_nonpath_arg(cache, tmp_path):
     assert len(calls) == ncalls + 1
     assert memoread(arg=1, filepath=path) == "content"
     assert len(calls) == ncalls + 1
+
+
+def test_dir_fingerprint_order_irrelevant(tmp_path):
+    start = time.time()
+    file1 = tmp_path / "apple.txt"
+    file1.write_text("Apple\n")
+    os.utime(file1, (start - 1, start - 1))
+    file2 = tmp_path / "banana.txt"
+    file2.write_text("This is test text.\n")
+    os.utime(file2, (start - 2, start - 2))
+    file3 = tmp_path / "coconut.txt"
+    file3.write_text("Lorem ipsum dolor sit amet, consectetur adipisicing elit\n")
+    os.utime(file3, (start - 3, start - 3))
+    df_tuples = []
+    for file_list in [
+        [file1, file2, file3],
+        [file3, file2, file1],
+        [file2, file1, file3],
+    ]:
+        dprint = DirFingerprint()
+        for f in file_list:
+            fprint = FileFingerprint.from_stat(os.stat(f))
+            dprint.add_file(f, fprint)
+        df_tuples.append(dprint.to_tuple())
+    for i in range(1, len(df_tuples)):
+        assert df_tuples[0] == df_tuples[i]
