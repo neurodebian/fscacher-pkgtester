@@ -1,10 +1,12 @@
 from collections import deque, namedtuple
 from functools import wraps
+from hashlib import md5
 from inspect import Parameter, signature
 import logging
 import os
 import os.path as op
 import shutil
+import sys
 import time
 import appdirs
 import joblib
@@ -204,12 +206,19 @@ class FileFingerprint(namedtuple("FileFingerprint", "mtime_ns ctime_ns size inod
 class DirFingerprint:
     def __init__(self):
         self.last_modified = None
-        self.tree_fprints = {}
+        self.hash = None
 
     def add_file(self, path, fprint: FileFingerprint):
-        self.tree_fprints[path] = fprint
-        if self.last_modified is None or self.last_modified < fprint.mtime_ns:
+        fprint_hash = md5(
+            ascii((str(path), fprint.to_tuple())).encode("us-ascii")
+        ).digest()
+        if self.hash is None:
+            self.hash = fprint_hash
             self.last_modified = fprint.mtime_ns
+        else:
+            self.hash = xor_bytes(self.hash, fprint_hash)
+            if self.last_modified < fprint.mtime_ns:
+                self.last_modified = fprint.mtime_ns
 
     def modified_in_window(self, min_dtime):
         if self.last_modified is None:
@@ -218,4 +227,14 @@ class DirFingerprint:
             return abs(time.time() - self.last_modified * 1e-9) < min_dtime
 
     def to_tuple(self):
-        return sum(sorted(self.tree_fprints.items()), ())
+        if self.hash is None:
+            return (None,)
+        else:
+            return (self.hash.hex(),)
+
+
+def xor_bytes(b1: bytes, b2: bytes) -> bytes:
+    length = max(len(b1), len(b2))
+    i1 = int.from_bytes(b1, sys.byteorder)
+    i2 = int.from_bytes(b2, sys.byteorder)
+    return (i1 ^ i2).to_bytes(length, sys.byteorder)
