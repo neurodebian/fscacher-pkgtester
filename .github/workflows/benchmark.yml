@@ -83,6 +83,9 @@ jobs:
             - name: Run benchmarks on newest code
               run: asv run --strict --show-stderr --python "$ASV_PYTHON" HEAD^-1
 
+            - name: Clean out vfat mount
+              run: rm -rf /tmp/vfat/*
+
             - name: Check out previous code
               run: git checkout --force refs/bm/merge-target
 
