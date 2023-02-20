@@ -11,6 +11,7 @@ from ..cache import DirFingerprint, FileFingerprint
 
 platform_system = platform.system().lower()
 on_windows = platform_system == "windows"
+on_pypy = platform.python_implementation().lower() == "pypy"
 
 
 @pytest.fixture(autouse=True)
@@ -63,7 +64,6 @@ def test_memoize(cache):
 
 
 def test_memoize_multiple(cache):
-
     # Make sure that with the same cache can cover multiple functions
     @cache.memoize
     def f1():
@@ -141,9 +141,11 @@ def test_memoize_path(cache, tmp_path):
     check_new_memoread(0, "Content")
 
     # Check that symlinks should be dereferenced
-    if not on_windows or sys.version_info[:2] >= (3, 8):
-        # realpath doesn't work right on Windows on pre-3.8 Python, so skip the
-        # test then.
+    if not on_windows or (
+        sys.version_info[:2] >= (3, 8) and not (on_windows and on_pypy)
+    ):
+        # realpath doesn't work right on Windows on pre-3.8 Python, and PyPy on
+        # Windows doesn't support symlinks at all, so skip the test then.
         symlink1 = str(tmp_path / (fname + ".link1"))
         try:
             os.symlink(fname, symlink1)
@@ -221,9 +223,11 @@ def test_memoize_path_dir(cache, tmp_path):
     check_new_memoread(0, 14)
 
     # Check that symlinks should be dereferenced
-    if not on_windows or sys.version_info[:2] >= (3, 8):
-        # realpath doesn't work right on Windows on pre-3.8 Python, so skip the
-        # test then.
+    if not on_windows or (
+        sys.version_info[:2] >= (3, 8) and not (on_windows and on_pypy)
+    ):
+        # realpath doesn't work right on Windows on pre-3.8 Python, and PyPy on
+        # Windows doesn't support symlinks at all, so skip the test then.
         symlink1 = str(tmp_path / (fname + ".link1"))
         try:
             os.symlink(fname, symlink1)
