@@ -15,8 +15,7 @@ lgr = logging.getLogger(__name__)
 
 
 class PersistentCache(object):
-    """Persistent cache providing @memoize and @memoize_path decorators
-    """
+    """Persistent cache providing @memoize and @memoize_path decorators"""
 
     _min_dtime = 0.01  # min difference between now and mtime to consider
     # for caching
@@ -158,8 +157,7 @@ class PersistentCache(object):
 
     @staticmethod
     def _get_file_fingerprint(path):
-        """Simplistic generic file fingerprinting based on ctime, mtime, and size
-        """
+        """Simplistic generic file fingerprinting based on ctime, mtime, and size"""
         try:
             # we can't take everything, since atime can change, etc.
             # So let's take some
