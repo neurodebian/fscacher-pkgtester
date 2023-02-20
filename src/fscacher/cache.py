@@ -15,8 +15,7 @@ lgr = logging.getLogger(__name__)
 
 
 class PersistentCache(object):
-    """Persistent cache providing @memoize and @memoize_path decorators
-    """
+    """Persistent cache providing @memoize and @memoize_path decorators"""
 
     _min_dtime = 0.01  # min difference between now and mtime to consider
     # for caching
@@ -122,7 +121,13 @@ class PersistentCache(object):
             bound = sig.bind(*args, **kwargs)
             bound.apply_defaults()
             path_orig = bound.arguments[path_arg]
-            path = op.realpath(path_orig)
+            try:
+                path = op.realpath(path_orig)
+            except TypeError:
+                lgr.debug(
+                    "Calling %s directly since argument is not a path-like object", f
+                )
+                return f(*args, **kwargs)
             if path != path_orig:
                 lgr.log(5, "Dereferenced %r into %r", path_orig, path)
             if op.isdir(path):
@@ -158,8 +163,7 @@ class PersistentCache(object):
 
     @staticmethod
     def _get_file_fingerprint(path):
-        """Simplistic generic file fingerprinting based on ctime, mtime, and size
-        """
+        """Simplistic generic file fingerprinting based on ctime, mtime, and size"""
         try:
             # we can't take everything, since atime can change, etc.
             # So let's take some

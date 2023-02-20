@@ -18,6 +18,7 @@ class BaseCacheBenchmark(ABC):
         # Must return the path created
         ...
 
+    @staticmethod
     @abstractmethod
     def init_func(cache):
         # Must return the function
