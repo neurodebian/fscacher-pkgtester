@@ -121,7 +121,11 @@ class PersistentCache(object):
             bound = sig.bind(*args, **kwargs)
             bound.apply_defaults()
             path_orig = bound.arguments[path_arg]
-            path = op.realpath(path_orig)
+            try:
+                path = op.realpath(path_orig)
+            except TypeError:
+                lgr.debug("Argument is not a path-like object; bypassing cache")
+                return f(*args, **kwargs)
             if path != path_orig:
                 lgr.log(5, "Dereferenced %r into %r", path_orig, path)
             if op.isdir(path):

@@ -429,3 +429,28 @@ def test_dir_fingerprint_order_irrelevant(tmp_path):
         df_tuples.append(dprint.to_tuple())
     for i in range(1, len(df_tuples)):
         assert df_tuples[0] == df_tuples[i]
+
+
+def test_memoize_non_pathlike_arg(cache, tmp_path):
+    calls = []
+
+    @cache.memoize_path
+    def strify(x):
+        calls.append(x)
+        return str(x)
+
+    path = tmp_path / "foo"
+    path.touch()
+    time.sleep(cache._min_dtime * 1.1)
+
+    assert strify(path) == str(path)
+    assert calls == [path]
+
+    assert strify(42) == "42"
+    assert calls == [path, 42]
+
+    assert strify(path) == str(path)
+    assert calls == [path, 42]
+
+    assert strify(42) == "42"
+    assert calls == [path, 42, 42]

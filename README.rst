@@ -39,7 +39,8 @@ Now the outputs of ``foo()`` will be cached for each set of input arguments and
 for a "fingerprint" (timestamps & size) of each ``path``.  If ``foo()`` is
 called twice with the same set of arguments, the result from the first call
 will be reused for the second, unless the file pointed to by ``path`` changes,
-in which case the function will be run again.
+in which case the function will be run again.  If ``foo()`` is called with a
+non-path-like object as the value of ``path``, the cache is ignored.
 
 Caches are stored on-disk and thus persist between Python runs.  To clear a
 given ``PersistentCache`` and erase its data store, call the ``clear()``
