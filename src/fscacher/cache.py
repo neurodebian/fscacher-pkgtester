@@ -124,7 +124,9 @@ class PersistentCache(object):
             try:
                 path = op.realpath(path_orig)
             except TypeError:
-                lgr.debug("Argument is not a path-like object; bypassing cache")
+                lgr.debug(
+                    "Calling %s directly since argument is not a path-like object", f
+                )
                 return f(*args, **kwargs)
             if path != path_orig:
                 lgr.log(5, "Dereferenced %r into %r", path_orig, path)
