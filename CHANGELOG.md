@@ -1,3 +1,30 @@
+# 0.3.0 (Mon Feb 20 2023)
+
+#### 🚀 Enhancement
+
+- Ignore cache for non-path-like arguments [#79](https://github.com/con/fscacher/pull/79) ([@jwodder](https://github.com/jwodder))
+
+#### 🐛 Bug Fix
+
+- Drop support for Python 3.6 [#80](https://github.com/con/fscacher/pull/80) ([@jwodder](https://github.com/jwodder) [@yarikoptic](https://github.com/yarikoptic))
+
+#### 🏠 Internal
+
+- Update GitHub Actions action versions [#77](https://github.com/con/fscacher/pull/77) ([@jwodder](https://github.com/jwodder))
+
+#### 🧪 Tests
+
+- Test against more recent versions of PyPy [#81](https://github.com/con/fscacher/pull/81) ([@jwodder](https://github.com/jwodder))
+- Test against Python 3.11 [#78](https://github.com/con/fscacher/pull/78) ([@jwodder](https://github.com/jwodder))
+- Clean out vfat mount between benchmarks [#76](https://github.com/con/fscacher/pull/76) ([@jwodder](https://github.com/jwodder))
+
+#### Authors: 2
+
+- John T. Wodder II ([@jwodder](https://github.com/jwodder))
+- Yaroslav Halchenko ([@yarikoptic](https://github.com/yarikoptic))
+
+---
+
 # 0.2.0 (Tue Feb 22 2022)
 
 #### 🚀 Enhancement
