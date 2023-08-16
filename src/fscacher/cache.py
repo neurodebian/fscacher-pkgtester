@@ -1,5 +1,5 @@
 from collections import deque, namedtuple
-from functools import wraps
+from functools import partial, wraps
 from hashlib import md5
 from inspect import Parameter, signature
 import logging
@@ -78,12 +78,16 @@ class PersistentCache(object):
         except Exception as exc:
             lgr.warning(f"Failed to clear out the cache directory: {exc}")
 
-    def memoize(self, f, ignore=None):
+    def memoize(self, f=None, *, exclude_kwargs=None):
+        if f is None:
+            return partial(self.memoize, exclude_kwargs=exclude_kwargs)
         if self._ignore_cache:
             return f
-        return self._memory.cache(f, ignore=ignore)
+        return self._memory.cache(f, ignore=exclude_kwargs)
 
-    def memoize_path(self, f):
+    def memoize_path(self, f=None, *, exclude_kwargs=None):
+        if f is None:
+            return partial(self.memoize_path, exclude_kwargs=exclude_kwargs)
         if self._ignore_cache:
             return f
 
@@ -112,7 +116,11 @@ class PersistentCache(object):
         # we need to ignore 'path' since we would like to dereference if symlink
         # but then expect joblib's caching work on both original and dereferenced
         # So we will add dereferenced path into fingerprint_kwarg
-        fingerprinted = self.memoize(fingerprinted, ignore=[path_arg])
+        fingerprinted = self.memoize(
+            fingerprinted,
+            exclude_kwargs=[path_arg]
+            + (list(exclude_kwargs) if exclude_kwargs is not None else []),
+        )
 
         @wraps(f)
         def fingerprinter(*args, **kwargs):
