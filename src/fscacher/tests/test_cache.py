@@ -504,3 +504,45 @@ def test_memoize_pathlike_arg(cache, tmp_path):
 
     assert strify(bar) == str(tmp_path / "bar")
     assert calls == [path, bar]
+
+
+def test_memoize_path_exclude_kwargs(cache, tmp_path):
+    calls = []
+
+    @cache.memoize_path(exclude_kwargs=["extra"])
+    def memoread_extra(path, arg, kwarg=None, extra=None):
+        calls.append((path, arg, kwarg, extra))
+        with open(path) as f:
+            return f.read()
+
+    path = tmp_path / "file.dat"
+    path.write_text("content")
+
+    time.sleep(cache._min_dtime * 1.1)
+
+    assert memoread_extra(path, 1, extra="foo") == "content"
+    assert calls == [(path, 1, None, "foo")]
+
+    assert memoread_extra(path, 1, extra="bar") == "content"
+    assert calls == [(path, 1, None, "foo")]
+
+    assert memoread_extra(path, 1, kwarg="quux", extra="bar") == "content"
+    assert calls == [(path, 1, None, "foo"), (path, 1, "quux", "bar")]
+
+    path.write_text("different")
+
+    time.sleep(cache._min_dtime * 1.1)
+
+    assert memoread_extra(path, 1, extra="foo") == "different"
+    assert calls == [
+        (path, 1, None, "foo"),
+        (path, 1, "quux", "bar"),
+        (path, 1, None, "foo"),
+    ]
+
+    assert memoread_extra(path, 1, extra="bar") == "different"
+    assert calls == [
+        (path, 1, None, "foo"),
+        (path, 1, "quux", "bar"),
+        (path, 1, None, "foo"),
+    ]
