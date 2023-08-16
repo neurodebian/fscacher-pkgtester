@@ -1,3 +1,16 @@
+# 0.4.0 (Wed Aug 16 2023)
+
+#### 🚀 Enhancement
+
+- Add `exclude_kwargs` to memoization decorators [#38](https://github.com/con/fscacher/pull/38) ([@yarikoptic](https://github.com/yarikoptic) [@jwodder](https://github.com/jwodder))
+
+#### Authors: 2
+
+- John T. Wodder II ([@jwodder](https://github.com/jwodder))
+- Yaroslav Halchenko ([@yarikoptic](https://github.com/yarikoptic))
+
+---
+
 # 0.3.0 (Mon Feb 20 2023)
 
 #### 🚀 Enhancement
