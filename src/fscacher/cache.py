@@ -8,8 +8,8 @@ import os.path as op
 import shutil
 import sys
 import time
-import appdirs
 import joblib
+from platformdirs import PlatformDirs
 
 lgr = logging.getLogger(__name__)
 
@@ -43,7 +43,7 @@ class PersistentCache(object):
          set, `FSCACHER_CACHE` is used
         """
         if path is None:
-            dirs = appdirs.AppDirs("fscacher")
+            dirs = PlatformDirs("fscacher")
             path = op.join(dirs.user_cache_dir, (name or "cache"))
         elif name is not None:
             raise ValueError("'name' and 'path' are mutually exclusive")
