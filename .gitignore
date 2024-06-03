@@ -5,6 +5,8 @@
 .cache/
 .coverage
 .eggs/
+.hypothesis/
+.idea/
 .mypy_cache/
 .nox/
 .pytest_cache/
