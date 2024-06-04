@@ -1,3 +1,34 @@
+# 0.4.1 (Tue Jun 04 2024)
+
+#### 🐛 Bug Fix
+
+- Stop using/testing EOLed 3.6 and 3.7, use 3.9 for linting (3.8 EOLs soon) [#91](https://github.com/con/fscacher/pull/91) ([@yarikoptic](https://github.com/yarikoptic) [@jwodder](https://github.com/jwodder))
+- ASV dropped --strict option  in 0.6.0 release [#83](https://github.com/con/fscacher/pull/83) ([@yarikoptic](https://github.com/yarikoptic))
+
+#### 🏠 Internal
+
+- Add a few folders I found locally into git ignore [#92](https://github.com/con/fscacher/pull/92) ([@yarikoptic](https://github.com/yarikoptic))
+- [gh-actions](deps): Bump codecov/codecov-action from 3 to 4 [#89](https://github.com/con/fscacher/pull/89) ([@dependabot[bot]](https://github.com/dependabot[bot]) [@jwodder](https://github.com/jwodder))
+- [gh-actions](deps): Bump actions/setup-python from 4 to 5 [#88](https://github.com/con/fscacher/pull/88) ([@dependabot[bot]](https://github.com/dependabot[bot]))
+- [gh-actions](deps): Bump actions/checkout from 3 to 4 [#82](https://github.com/con/fscacher/pull/82) ([@dependabot[bot]](https://github.com/dependabot[bot]))
+
+#### 🧪 Tests
+
+- Test against Python 3.12 and PyPy 3.10 [#84](https://github.com/con/fscacher/pull/84) ([@jwodder](https://github.com/jwodder))
+- Use Python 3.8 to test against dev version of joblib [#86](https://github.com/con/fscacher/pull/86) ([@jwodder](https://github.com/jwodder))
+
+#### 🔩 Dependency Updates
+
+- Replace appdirs with platformdirs [#85](https://github.com/con/fscacher/pull/85) ([@jwodder](https://github.com/jwodder))
+
+#### Authors: 3
+
+- [@dependabot[bot]](https://github.com/dependabot[bot])
+- John T. Wodder II ([@jwodder](https://github.com/jwodder))
+- Yaroslav Halchenko ([@yarikoptic](https://github.com/yarikoptic))
+
+---
+
 # 0.4.0 (Wed Aug 16 2023)
 
 #### 🚀 Enhancement
