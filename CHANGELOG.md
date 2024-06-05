@@ -1,3 +1,15 @@
+# 1.0.2 (Wed Jun 05 2024)
+
+#### 🏠 Internal
+
+- Upload to testpypi [#3](https://github.com/neurodebian/fscacher-pkgtester/pull/3) ([@yarikoptic](https://github.com/yarikoptic))
+
+#### Authors: 1
+
+- Yaroslav Halchenko ([@yarikoptic](https://github.com/yarikoptic))
+
+---
+
 # 1.0.1 (Wed Jun 05 2024)
 
 #### 📝 Documentation
