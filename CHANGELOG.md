@@ -1,3 +1,15 @@
+# 1.0.1 (Wed Jun 05 2024)
+
+#### 📝 Documentation
+
+- Manually fixup CHANGELOG for 1.0 -- release failed [#2](https://github.com/neurodebian/fscacher-pkgtester/pull/2) ([@yarikoptic](https://github.com/yarikoptic))
+
+#### Authors: 1
+
+- Yaroslav Halchenko ([@yarikoptic](https://github.com/yarikoptic))
+
+---
+
 # 1.0.0 (Wed Jun 05 2024)
 
 #### 💥 Breaking Change
